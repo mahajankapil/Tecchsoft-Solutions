@@ -1,312 +1,144 @@
-# fastq
+# merge2
 
-![ci][ci-url]
-[![npm version][npm-badge]][npm-url]
+Merge multiple streams into one stream in sequence or parallel.
 
-Fast, in memory work queue.
-
-Benchmarks (1 million tasks):
-
-* setImmediate: 812ms
-* fastq: 854ms
-* async.queue: 1298ms
-* neoAsync.queue: 1249ms
-
-Obtained on node 12.16.1, on a dedicated server.
-
-If you need zero-overhead series function call, check out
-[fastseries](http://npm.im/fastseries). For zero-overhead parallel
-function call, check out [fastparallel](http://npm.im/fastparallel).
-
-[![js-standard-style](https://raw.githubusercontent.com/feross/standard/master/badge.png)](https://github.com/feross/standard)
-
-  * <a href="#install">Installation</a>
-  * <a href="#usage">Usage</a>
-  * <a href="#api">API</a>
-  * <a href="#license">Licence &amp; copyright</a>
+[![NPM version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+[![Downloads][downloads-image]][downloads-url]
 
 ## Install
 
-`npm i fastq --save`
+Install with [npm](https://npmjs.org/package/merge2)
 
-## Usage (callback API)
+```sh
+npm install merge2
+```
+
+## Usage
 
 ```js
-'use strict'
+const gulp = require('gulp')
+const merge2 = require('merge2')
+const concat = require('gulp-concat')
+const minifyHtml = require('gulp-minify-html')
+const ngtemplate = require('gulp-ngtemplate')
 
-const queue = require('fastq')(worker, 1)
-
-queue.push(42, function (err, result) {
-  if (err) { throw err }
-  console.log('the result is', result)
+gulp.task('app-js', function () {
+  return merge2(
+      gulp.src('static/src/tpl/*.html')
+        .pipe(minifyHtml({empty: true}))
+        .pipe(ngtemplate({
+          module: 'genTemplates',
+          standalone: true
+        })
+      ), gulp.src([
+        'static/src/js/app.js',
+        'static/src/js/locale_zh-cn.js',
+        'static/src/js/router.js',
+        'static/src/js/tools.js',
+        'static/src/js/services.js',
+        'static/src/js/filters.js',
+        'static/src/js/directives.js',
+        'static/src/js/controllers.js'
+      ])
+    )
+    .pipe(concat('app.js'))
+    .pipe(gulp.dest('static/dist/js/'))
 })
-
-function worker (arg, cb) {
-  cb(null, arg * 2)
-}
 ```
-
-## Usage (promise API)
 
 ```js
-const queue = require('fastq').promise(worker, 1)
-
-async function worker (arg) {
-  return arg * 2
-}
-
-async function run () {
-  const result = await queue.push(42)
-  console.log('the result is', result)
-}
-
-run()
+const stream = merge2([stream1, stream2], stream3, {end: false})
+//...
+stream.add(stream4, stream5)
+//..
+stream.end()
 ```
-
-### Setting "this"
 
 ```js
-'use strict'
-
-const that = { hello: 'world' }
-const queue = require('fastq')(that, worker, 1)
-
-queue.push(42, function (err, result) {
-  if (err) { throw err }
-  console.log(this)
-  console.log('the result is', result)
-})
-
-function worker (arg, cb) {
-  console.log(this)
-  cb(null, arg * 2)
-}
+// equal to merge2([stream1, stream2], stream3)
+const stream = merge2()
+stream.add([stream1, stream2])
+stream.add(stream3)
 ```
 
-### Using with TypeScript (callback API)
+```js
+// merge order:
+//   1. merge `stream1`;
+//   2. merge `stream2` and `stream3` in parallel after `stream1` merged;
+//   3. merge 'stream4' after `stream2` and `stream3` merged;
+const stream = merge2(stream1, [stream2, stream3], stream4)
 
-```ts
-'use strict'
-
-import * as fastq from "fastq";
-import type { queue, done } from "fastq";
-
-type Task = {
-  id: number
-}
-
-const q: queue<Task> = fastq(worker, 1)
-
-q.push({ id: 42})
-
-function worker (arg: Task, cb: done) {
-  console.log(arg.id)
-  cb(null)
-}
+// merge order:
+//   1. merge `stream5` and `stream6` in parallel after `stream4` merged;
+//   2. merge 'stream7' after `stream5` and `stream6` merged;
+stream.add([stream5, stream6], stream7)
 ```
 
-### Using with TypeScript (promise API)
-
-```ts
-'use strict'
-
-import * as fastq from "fastq";
-import type { queueAsPromised } from "fastq";
-
-type Task = {
-  id: number
-}
-
-const q: queueAsPromised<Task> = fastq.promise(asyncWorker, 1)
-
-q.push({ id: 42}).catch((err) => console.error(err))
-
-async function asyncWorker (arg: Task): Promise<void> {
-  // No need for a try-catch block, fastq handles errors automatically
-  console.log(arg.id)
-}
+```js
+// nest merge
+// equal to merge2(stream1, stream2, stream6, stream3, [stream4, stream5]);
+const streamA = merge2(stream1, stream2)
+const streamB = merge2(stream3, [stream4, stream5])
+const stream = merge2(streamA, streamB)
+streamA.add(stream6)
 ```
 
 ## API
 
-* <a href="#fastqueue"><code>fastqueue()</code></a>
-* <a href="#push"><code>queue#<b>push()</b></code></a>
-* <a href="#unshift"><code>queue#<b>unshift()</b></code></a>
-* <a href="#pause"><code>queue#<b>pause()</b></code></a>
-* <a href="#resume"><code>queue#<b>resume()</b></code></a>
-* <a href="#idle"><code>queue#<b>idle()</b></code></a>
-* <a href="#length"><code>queue#<b>length()</b></code></a>
-* <a href="#getQueue"><code>queue#<b>getQueue()</b></code></a>
-* <a href="#kill"><code>queue#<b>kill()</b></code></a>
-* <a href="#killAndDrain"><code>queue#<b>killAndDrain()</b></code></a>
-* <a href="#error"><code>queue#<b>error()</b></code></a>
-* <a href="#concurrency"><code>queue#<b>concurrency</b></code></a>
-* <a href="#drain"><code>queue#<b>drain</b></code></a>
-* <a href="#empty"><code>queue#<b>empty</b></code></a>
-* <a href="#saturated"><code>queue#<b>saturated</b></code></a>
-* <a href="#promise"><code>fastqueue.promise()</code></a>
+```js
+const merge2 = require('merge2')
+```
 
--------------------------------------------------------
-<a name="fastqueue"></a>
-### fastqueue([that], worker, concurrency)
+### merge2()
 
-Creates a new queue.
+### merge2(options)
 
-Arguments:
+### merge2(stream1, stream2, ..., streamN)
 
-* `that`, optional context of the `worker` function.
-* `worker`, worker function, it would be called with `that` as `this`,
-  if that is specified.
-* `concurrency`, number of concurrent tasks that could be executed in
-  parallel.
+### merge2(stream1, stream2, ..., streamN, options)
 
--------------------------------------------------------
-<a name="push"></a>
-### queue.push(task, done)
+### merge2(stream1, [stream2, stream3, ...], streamN, options)
 
-Add a task at the end of the queue. `done(err, result)` will be called
-when the task was processed.
+return a duplex stream (mergedStream). streams in array will be merged in parallel.
 
--------------------------------------------------------
-<a name="unshift"></a>
-### queue.unshift(task, done)
+### mergedStream.add(stream)
 
-Add a task at the beginning of the queue. `done(err, result)` will be called
-when the task was processed.
+### mergedStream.add(stream1, [stream2, stream3, ...], ...)
 
--------------------------------------------------------
-<a name="pause"></a>
-### queue.pause()
+return the mergedStream.
 
-Pause the processing of tasks. Currently worked tasks are not
-stopped.
+### mergedStream.on('queueDrain', function() {})
 
--------------------------------------------------------
-<a name="resume"></a>
-### queue.resume()
+It will emit 'queueDrain' when all streams merged. If you set `end === false` in options, this event give you a notice that should add more streams to merge or end the mergedStream.
 
-Resume the processing of tasks.
+#### stream
 
--------------------------------------------------------
-<a name="idle"></a>
-### queue.idle()
+*option*
+Type: `Readable` or `Duplex` or `Transform` stream.
 
-Returns `false` if there are tasks being processed or waiting to be processed.
-`true` otherwise.
+#### options
 
--------------------------------------------------------
-<a name="length"></a>
-### queue.length()
+*option*
+Type: `Object`.
 
-Returns the number of tasks waiting to be processed (in the queue).
+* **end** - `Boolean` - if `end === false` then mergedStream will not be auto ended, you should end by yourself. **Default:** `undefined`
 
--------------------------------------------------------
-<a name="getQueue"></a>
-### queue.getQueue()
+* **pipeError** - `Boolean` - if `pipeError === true` then mergedStream will emit `error` event from source streams. **Default:** `undefined`
 
-Returns all the tasks be processed (in the queue). Returns empty array when there are no tasks
+* **objectMode** - `Boolean` . **Default:** `true`
 
--------------------------------------------------------
-<a name="kill"></a>
-### queue.kill()
-
-Removes all tasks waiting to be processed, and reset `drain` to an empty
-function.
-
--------------------------------------------------------
-<a name="killAndDrain"></a>
-### queue.killAndDrain()
-
-Same than `kill` but the `drain` function will be called before reset to empty.
-
--------------------------------------------------------
-<a name="error"></a>
-### queue.error(handler)
-
-Set a global error handler. `handler(err, task)` will be called
-each time a task is completed, `err` will be not null if the task has thrown an error.
-
--------------------------------------------------------
-<a name="concurrency"></a>
-### queue.concurrency
-
-Property that returns the number of concurrent tasks that could be executed in
-parallel. It can be altered at runtime.
-
--------------------------------------------------------
-<a name="paused"></a>
-### queue.paused
-
-Property (Read-Only) that returns `true` when the queue is in a paused state.
-
--------------------------------------------------------
-<a name="drain"></a>
-### queue.drain
-
-Function that will be called when the last
-item from the queue has been processed by a worker.
-It can be altered at runtime.
-
--------------------------------------------------------
-<a name="empty"></a>
-### queue.empty
-
-Function that will be called when the last
-item from the queue has been assigned to a worker.
-It can be altered at runtime.
-
--------------------------------------------------------
-<a name="saturated"></a>
-### queue.saturated
-
-Function that will be called when the queue hits the concurrency
-limit.
-It can be altered at runtime.
-
--------------------------------------------------------
-<a name="promise"></a>
-### fastqueue.promise([that], worker(arg), concurrency)
-
-Creates a new queue with `Promise` apis. It also offers all the methods
-and properties of the object returned by [`fastqueue`](#fastqueue) with the modified
-[`push`](#pushPromise) and [`unshift`](#unshiftPromise) methods.
-
-Node v10+ is required to use the promisified version.
-
-Arguments:
-* `that`, optional context of the `worker` function.
-* `worker`, worker function, it would be called with `that` as `this`,
-  if that is specified. It MUST return a `Promise`.
-* `concurrency`, number of concurrent tasks that could be executed in
-  parallel.
-
-<a name="pushPromise"></a>
-#### queue.push(task) => Promise
-
-Add a task at the end of the queue. The returned `Promise`  will be fulfilled (rejected)
-when the task is completed successfully (unsuccessfully).
-
-This promise could be ignored as it will not lead to a `'unhandledRejection'`.
-
-<a name="unshiftPromise"></a>
-#### queue.unshift(task) => Promise
-
-Add a task at the beginning of the queue. The returned `Promise`  will be fulfilled (rejected)
-when the task is completed successfully (unsuccessfully).
-
-This promise could be ignored as it will not lead to a `'unhandledRejection'`.
-
-<a name="drained"></a>
-#### queue.drained() => Promise
-
-Wait for the queue to be drained. The returned `Promise` will be resolved when all tasks in the queue have been processed by a worker.
-
-This promise could be ignored as it will not lead to a `'unhandledRejection'`.
+`objectMode` and other options(`highWaterMark`, `defaultEncoding` ...) is same as Node.js `Stream`.
 
 ## License
 
-ISC
+MIT © [Teambition](https://www.teambition.com)
 
-[ci-url]: https://github.com/mcollina/fastq/workflows/ci/badge.svg
-[npm-badge]: https://badge.fury.io/js/fastq.svg
-[npm-url]: https://badge.fury.io/js/fastq
+[npm-url]: https://npmjs.org/package/merge2
+[npm-image]: http://img.shields.io/npm/v/merge2.svg
+
+[travis-url]: https://travis-ci.org/teambition/merge2
+[travis-image]: http://img.shields.io/travis/teambition/merge2.svg
+
+[downloads-url]: https://npmjs.org/package/merge2
+[downloads-image]: http://img.shields.io/npm/dm/merge2.svg?style=flat-square

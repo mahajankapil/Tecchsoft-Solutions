@@ -1,53 +1,43 @@
 {
-  "name": "fastq",
-  "version": "1.19.1",
-  "description": "Fast, in memory work queue",
-  "main": "queue.js",
-  "scripts": {
-    "lint": "standard --verbose | snazzy",
-    "unit": "nyc --lines 100 --branches 100 --functions 100 --check-coverage --reporter=text tape test/test.js test/promise.js",
-    "coverage": "nyc --reporter=html --reporter=cobertura --reporter=text tape test/test.js test/promise.js",
-    "test:report": "npm run lint && npm run unit:report",
-    "test": "npm run lint && npm run unit",
-    "typescript": "tsc --project ./test/tsconfig.json",
-    "legacy": "tape test/test.js"
-  },
-  "pre-commit": [
-    "test",
-    "typescript"
+  "name": "merge2",
+  "description": "Merge multiple streams into one stream in sequence or parallel.",
+  "authors": [
+    "Yan Qing <admin@zensh.com>"
   ],
+  "license": "MIT",
+  "version": "1.4.1",
+  "main": "./index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mcollina/fastq.git"
+    "url": "git@github.com:teambition/merge2.git"
   },
+  "homepage": "https://github.com/teambition/merge2",
   "keywords": [
-    "fast",
-    "queue",
-    "async",
-    "worker"
+    "merge2",
+    "multiple",
+    "sequence",
+    "parallel",
+    "merge",
+    "stream",
+    "merge stream",
+    "sync"
   ],
-  "author": "Matteo Collina <hello@matteocollina.com>",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/mcollina/fastq/issues"
+  "engines": {
+    "node": ">= 8"
   },
-  "homepage": "https://github.com/mcollina/fastq#readme",
+  "dependencies": {},
   "devDependencies": {
-    "async": "^3.1.0",
-    "neo-async": "^2.6.1",
-    "nyc": "^17.0.0",
-    "pre-commit": "^1.2.2",
-    "snazzy": "^9.0.0",
-    "standard": "^16.0.0",
-    "tape": "^5.0.0",
-    "typescript": "^5.0.4"
+    "standard": "^14.3.4",
+    "through2": "^3.0.1",
+    "thunks": "^4.9.6",
+    "tman": "^1.10.0",
+    "to-through": "^2.0.0"
   },
-  "dependencies": {
-    "reusify": "^1.0.4"
+  "scripts": {
+    "test": "standard && tman"
   },
-  "standard": {
-    "ignore": [
-      "example.mjs"
-    ]
-  }
+  "files": [
+    "README.md",
+    "index.js"
+  ]
 }
