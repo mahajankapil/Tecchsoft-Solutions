@@ -1,144 +1,70 @@
-# merge2
+# Getting Started with Create React App
 
-Merge multiple streams into one stream in sequence or parallel.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-[![NPM version][npm-image]][npm-url]
-[![Build Status][travis-image]][travis-url]
-[![Downloads][downloads-image]][downloads-url]
+## Available Scripts
 
-## Install
+In the project directory, you can run:
 
-Install with [npm](https://npmjs.org/package/merge2)
+### `npm start`
 
-```sh
-npm install merge2
-```
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-## Usage
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-```js
-const gulp = require('gulp')
-const merge2 = require('merge2')
-const concat = require('gulp-concat')
-const minifyHtml = require('gulp-minify-html')
-const ngtemplate = require('gulp-ngtemplate')
+### `npm test`
 
-gulp.task('app-js', function () {
-  return merge2(
-      gulp.src('static/src/tpl/*.html')
-        .pipe(minifyHtml({empty: true}))
-        .pipe(ngtemplate({
-          module: 'genTemplates',
-          standalone: true
-        })
-      ), gulp.src([
-        'static/src/js/app.js',
-        'static/src/js/locale_zh-cn.js',
-        'static/src/js/router.js',
-        'static/src/js/tools.js',
-        'static/src/js/services.js',
-        'static/src/js/filters.js',
-        'static/src/js/directives.js',
-        'static/src/js/controllers.js'
-      ])
-    )
-    .pipe(concat('app.js'))
-    .pipe(gulp.dest('static/dist/js/'))
-})
-```
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-```js
-const stream = merge2([stream1, stream2], stream3, {end: false})
-//...
-stream.add(stream4, stream5)
-//..
-stream.end()
-```
+### `npm run build`
 
-```js
-// equal to merge2([stream1, stream2], stream3)
-const stream = merge2()
-stream.add([stream1, stream2])
-stream.add(stream3)
-```
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-```js
-// merge order:
-//   1. merge `stream1`;
-//   2. merge `stream2` and `stream3` in parallel after `stream1` merged;
-//   3. merge 'stream4' after `stream2` and `stream3` merged;
-const stream = merge2(stream1, [stream2, stream3], stream4)
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-// merge order:
-//   1. merge `stream5` and `stream6` in parallel after `stream4` merged;
-//   2. merge 'stream7' after `stream5` and `stream6` merged;
-stream.add([stream5, stream6], stream7)
-```
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-```js
-// nest merge
-// equal to merge2(stream1, stream2, stream6, stream3, [stream4, stream5]);
-const streamA = merge2(stream1, stream2)
-const streamB = merge2(stream3, [stream4, stream5])
-const stream = merge2(streamA, streamB)
-streamA.add(stream6)
-```
+### `npm run eject`
 
-## API
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-```js
-const merge2 = require('merge2')
-```
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-### merge2()
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-### merge2(options)
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-### merge2(stream1, stream2, ..., streamN)
+## Learn More
 
-### merge2(stream1, stream2, ..., streamN, options)
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-### merge2(stream1, [stream2, stream3, ...], streamN, options)
+To learn React, check out the [React documentation](https://reactjs.org/).
 
-return a duplex stream (mergedStream). streams in array will be merged in parallel.
+### Code Splitting
 
-### mergedStream.add(stream)
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
 
-### mergedStream.add(stream1, [stream2, stream3, ...], ...)
+### Analyzing the Bundle Size
 
-return the mergedStream.
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-### mergedStream.on('queueDrain', function() {})
+### Making a Progressive Web App
 
-It will emit 'queueDrain' when all streams merged. If you set `end === false` in options, this event give you a notice that should add more streams to merge or end the mergedStream.
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
 
-#### stream
+### Advanced Configuration
 
-*option*
-Type: `Readable` or `Duplex` or `Transform` stream.
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-#### options
+### Deployment
 
-*option*
-Type: `Object`.
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-* **end** - `Boolean` - if `end === false` then mergedStream will not be auto ended, you should end by yourself. **Default:** `undefined`
+### `npm run build` fails to minify
 
-* **pipeError** - `Boolean` - if `pipeError === true` then mergedStream will emit `error` event from source streams. **Default:** `undefined`
-
-* **objectMode** - `Boolean` . **Default:** `true`
-
-`objectMode` and other options(`highWaterMark`, `defaultEncoding` ...) is same as Node.js `Stream`.
-
-## License
-
-MIT © [Teambition](https://www.teambition.com)
-
-[npm-url]: https://npmjs.org/package/merge2
-[npm-image]: http://img.shields.io/npm/v/merge2.svg
-
-[travis-url]: https://travis-ci.org/teambition/merge2
-[travis-image]: http://img.shields.io/travis/teambition/merge2.svg
-
-[downloads-url]: https://npmjs.org/package/merge2
-[downloads-image]: http://img.shields.io/npm/dm/merge2.svg?style=flat-square
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
